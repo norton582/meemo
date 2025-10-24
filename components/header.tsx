@@ -40,7 +40,7 @@ export function Header() {
             
         </div>
         <div className="flex gap-2">
-            <div><AuthButton/></div>
+            <div className="pt-2"><AuthButton/></div>
             <div><ButtonDark/></div>
         </div>
     </div>

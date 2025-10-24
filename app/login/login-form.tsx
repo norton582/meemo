@@ -17,7 +17,9 @@ import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { signIn } from "@/lib/auth-client"
 import { toast } from "sonner"
-import { SubmitButton } from "@/components/button-submit"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 
 
 
@@ -32,6 +34,7 @@ const formSchema = z.object({
 
 export function LoginForm() {
     
+    const [loading, setLoading] = useState(false) // 👈 état pour le chargement
     const router = useRouter()
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -43,7 +46,10 @@ export function LoginForm() {
 
     // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        await signIn.email(
+        
+        try {
+            setLoading(true) // Début du chargement 
+            await signIn.email(
             {
                 email: values.email,
                 password: values.password,  
@@ -59,7 +65,12 @@ export function LoginForm() {
                     toast.error(error.error.message);
                 },
             }
-        )
+            )   
+        }catch{
+            toast.error("Une erreur est survenue lors de la connexion.")
+        }finally {
+            setLoading(false) // Fin du chargement 
+        }
     }
 
     
@@ -96,7 +107,16 @@ export function LoginForm() {
                         )}
                     />
                     
-                    <SubmitButton/>    
+                    <Button type="submit" disabled={loading} className="w-full">
+                        {loading ? (
+                            <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Chargement...
+                            </>
+                        ) : (
+                            "Submit"
+                        )}
+                    </Button>  
                 </form>
             </Form>
         </div>

@@ -17,6 +17,9 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { useState } from "react"
+import { Loader2 } from "lucide-react"
 
 
 
@@ -35,11 +38,12 @@ const formSchema = z.object({
     description: z.string().optional(),
 })
 
-export function MdpForm() {
-    
+export function MdpForm({ onSuccess }: { onSuccess?: () => void }) {
+
 
     const router = useRouter()
-    
+    const [loading, setLoading] = useState(false) // 👈 état pour le chargement
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -52,19 +56,46 @@ export function MdpForm() {
 
     // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        const reponse = await fetch("/api", {
+        /*const reponse = await fetch("/api", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(values),
         })
 
         if (reponse.ok) {
+            toast.success("Terminé !")
             router.push("/mdp");
-            router.refresh()
+            router.refresh();
+            onSuccess?.();
+        } else {
+            toast.error("Une erreur est survenue. Veuillez réessayer.")
+        }*/
+        try {
+            setLoading(true) // ⏳ active le spinner
+
+            const reponse = await fetch("/api", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(values),
+            })
+
+            if (reponse.ok) {
+                toast.success("Terminé !")
+                router.push("/mdp")
+                router.refresh()
+                onSuccess?.() // ✅ ferme le dialogue
+            } else {
+                toast.error("Une erreur est survenue.")
+            }
+        } catch  {
+            toast.error("Erreur de connexion au serveur.")
+        } finally {
+            setLoading(false) // 🟢 stoppe le spinner
         }
+
     }
 
- 
+
     return (
         <div>
             <Form {...form}>
@@ -78,7 +109,7 @@ export function MdpForm() {
                                 <FormControl>
                                     <Input {...field} />
                                 </FormControl>
-                                
+
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -88,11 +119,11 @@ export function MdpForm() {
                         name="username"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Username</FormLabel>
+                                <FormLabel>Username ou Email</FormLabel>
                                 <FormControl>
                                     <Input {...field} />
                                 </FormControl>
-                                
+
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -119,14 +150,21 @@ export function MdpForm() {
                                 <FormControl>
                                     <Textarea {...field} ></Textarea>
                                 </FormControl>
-                             
+
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                   
-                    <Button type="submit">
-                        Enregistrer
+
+                    <Button type="submit" disabled={loading} className="w-full">
+                        {loading ? (
+                            <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Enregistrement...
+                            </>
+                        ) : (
+                            "Enregistrer"
+                        )}
                     </Button>
                 </form>
             </Form>

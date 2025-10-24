@@ -17,30 +17,33 @@ import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { signUp } from "@/lib/auth-client"
 import { toast } from "sonner"
-import { SubmitButton } from "@/components/button-submit"
+import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
+import { useState } from "react"
 
 
 
 const formSchema = z.object({
-    name : z.string().min(3,{
+    name: z.string().min(3, {
         message: "3 Caractère minimum.",
     }),
     email: z.string().email({
         message: "Adresse e-mail invalide.",
     }),
-    password: z.string().min(5,{
+    password: z.string().min(5, {
         message: "Mot de passe trop court",
     }),
 })
 
 export function Formulaire() {
-    
+
     const router = useRouter()
-    
+    const [loading, setLoading] = useState(false) // 👈 état pour le chargement
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name:"",
+            name: "",
             email: "",
             password: "",
         },
@@ -48,27 +51,37 @@ export function Formulaire() {
 
     // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        await signUp.email(
-            {
-                name: values.name,
-                email: values.email,
-                password: values.password,  
-            },
 
-            {
-                onSuccess: () => {
-                    toast.success("Création réussie !")
-                    router.push("/")
-                    router.refresh()
+        try {
+            setLoading(true) // ⏳ active le spinner
+
+            await signUp.email(
+                {
+                    name: values.name,
+                    email: values.email,
+                    password: values.password,
                 },
-                onError: (error) => {
-                    toast.error(error.error.message);
-                },
-            }
-        )
+
+                {
+                    onSuccess: () => {
+                        toast.success("Création réussie !")
+                        router.push("/")
+                        router.refresh()
+                    },
+                    onError: (error) => {
+                        toast.error(error.error.message);
+                    },
+                }
+            )
+
+        } catch {
+            toast.error("Erreur de connexion au serveur.")
+        } finally {
+            setLoading(false) // 🟢 stoppe le spinner
+        }
     }
 
- 
+
     return (
         <div>
             <Form {...form}>
@@ -82,7 +95,7 @@ export function Formulaire() {
                                 <FormControl>
                                     <Input {...field} />
                                 </FormControl>
-                                
+
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -96,7 +109,7 @@ export function Formulaire() {
                                 <FormControl>
                                     <Input {...field} />
                                 </FormControl>
-                                
+
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -110,13 +123,22 @@ export function Formulaire() {
                                 <FormControl>
                                     <Input type="password" {...field} />
                                 </FormControl>
-                                
+
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                    
-                    <SubmitButton/>
+
+                    <Button type="submit" disabled={loading} className="w-full">
+                        {loading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Chargement...
+                            </>
+                        ) : (
+                            "Submit"
+                        )}
+                    </Button>
                 </form>
             </Form>
         </div>
