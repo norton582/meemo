@@ -8,9 +8,9 @@ export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql", // or "mysql", "postgresql", ...etc
     }),
-    allowedOrigins: [       
-        "https://meemo-two.vercel.app",     // 👈 domaine de production complet
-    ],
+    trustedOrigins: [
+    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : [])
+  ],
     emailAndPassword: { 
         enabled: true, 
     },
