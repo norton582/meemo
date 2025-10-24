@@ -8,9 +8,12 @@ export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql", // or "mysql", "postgresql", ...etc
     }),
-
+    allowedOrigins: [
+        "http://localhost:3000",        // 👈 front local
+        "https://meemo-two.vercel.app",     // 👈 domaine de production complet
+    ],
     emailAndPassword: { 
-    enabled: true, 
+        enabled: true, 
     },
     
 });
